@@ -1,0 +1,59 @@
+[project]
+name = "canary"
+version = "0.1.0"
+description = "AI驱动的数字人项目"
+authors = [
+    {name = "Your Name", email = "your.email@example.com"},
+]
+dependencies = [
+    # Web框架
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0",
+    
+    # AI/ML相关
+    "openai>=1.0.0",
+    "transformers>=4.35.0",
+    "torch>=2.0.0",
+    
+    # 工具库
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    "python-multipart>=0.0.6",
+    
+    # 其他依赖
+    "python-dotenv>=1.0.0",
+    "httpx>=0.25.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "black>=23.0.0",
+    "isort>=5.12.0",
+    "flake8>=6.0.0",
+    "mypy>=1.7.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv.sources]
+dev = { path = "." }
+
+[tool.black]
+line-length = 88
+target-version = ['py311']
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[project.scripts]
+canary = "canary.main:main"
