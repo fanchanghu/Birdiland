@@ -103,39 +103,33 @@ def create_gradio_interface() -> gr.Blocks:
     with gr.Blocks(
         title="Birdiland 聊天助手",
         theme=gr.themes.Soft(),
-        css="""
-        .gradio-container {
-            max-width: 800px !important;
-        }
-        .chatbot {
-            height: 500px !important;
-        }
-        """
     ) as interface:
-        
-        gr.Markdown("""
-        # 🤖 Birdiland 聊天助手
-        
-        欢迎与Birdiland聊天！这是一个AI驱动的数字人，可以回答你的问题并与你交流。
-        """)
+        with gr.Row():
+            gr.Markdown("""
+            # 🤖 Birdiland 聊天助手
+            
+            欢迎与Birdiland聊天！这是一个AI驱动的数字人，可以回答你的问题并与你交流。
+            """)
         
         with gr.Row():
             with gr.Column(scale=2):
-                chatbot = gr.Chatbot(
-                    label="对话记录",
-                    height=500,
-                    show_copy_button=True,
-                    type="messages"
-                )
-                
                 with gr.Row():
-                    msg = gr.Textbox(
-                        label="输入消息",
-                        placeholder="输入你想说的话...",
-                        lines=2,
-                        scale=4
+                    chatbot = gr.Chatbot(
+                        height=500,
+                        show_copy_button=True,
+                        type="messages",
+                        show_label=False
                     )
-                    send_btn = gr.Button("发送", variant="primary", scale=1)
+                    
+                with gr.Row(equal_height=True):
+                    msg = gr.Textbox(
+                        placeholder="输入你想说的话...",
+                        scale=8,
+                        show_label=False,
+                        lines=3,
+                        max_lines=10,
+                        submit_btn="发送"
+                    )
                 
                 with gr.Row():
                     clear_btn = gr.Button("清空对话", variant="secondary")
@@ -155,15 +149,10 @@ def create_gradio_interface() -> gr.Blocks:
                 - 支持长对话
                 - 响应式设计
                 """)
-        
+                profile_output = gr.Markdown()
+    
         # 事件处理
         msg.submit(
-            chat_ui.chat_with_birdiland,
-            inputs=[msg, chatbot],
-            outputs=[msg, chatbot]
-        )
-        
-        send_btn.click(
             chat_ui.chat_with_birdiland,
             inputs=[msg, chatbot],
             outputs=[msg, chatbot]
@@ -174,7 +163,6 @@ def create_gradio_interface() -> gr.Blocks:
             outputs=[chatbot]
         )
         
-        profile_output = gr.Markdown()
         profile_btn.click(
             chat_ui.get_birdiland_profile,
             outputs=[profile_output]
