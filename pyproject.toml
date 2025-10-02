@@ -1,5 +1,5 @@
 [project]
-name = "canary"
+name = "birdiland"
 version = "0.1.0"
 description = "AI驱动的数字人项目"
 authors = [
@@ -56,4 +56,4 @@ warn_unused_configs = true
 disallow_untyped_defs = true
 
 [project.scripts]
-canary = "canary.main:main"
+birdiland = "birdiland.main:main"

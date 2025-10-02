@@ -1,5 +1,5 @@
 """
-Canary 数字人主程序
+Birdiland 数字人主程序
 """
 
 import uvicorn
@@ -13,7 +13,7 @@ from .api.routes import router as api_router
 def create_app() -> FastAPI:
     """创建FastAPI应用"""
     app = FastAPI(
-        title="Canary API",
+        title="Birdiland API",
         description="AI驱动的数字人API服务",
         version="0.1.0",
         docs_url="/docs",
@@ -39,7 +39,7 @@ def main():
     """主函数"""
     app = create_app()
     
-    print("🚀 Canary 数字人服务启动中...")
+    print("🚀 Birdiland 数字人服务启动中...")
     print(f"📖 API文档: http://{settings.HOST}:{settings.PORT}/docs")
     
     uvicorn.run(

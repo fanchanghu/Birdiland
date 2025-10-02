@@ -23,15 +23,15 @@ class ChatResponse(BaseModel):
 @router.get("/health")
 async def health_check():
     """健康检查"""
-    return {"status": "healthy", "service": "Canary API"}
+    return {"status": "healthy", "service": "Birdiland API"}
 
 
 @router.post("/chat", response_model=ChatResponse)
-async def chat_with_canary(request: ChatRequest):
-    """与Canary聊天"""
+async def chat_with_birdiland(request: ChatRequest):
+    """与Birdiland聊天"""
     try:
         # 这里将集成AI模型
-        response = f"你好！我是Canary。你说了：{request.message}"
+        response = f"你好！我是Birdiland。你说了：{request.message}"
         
         return ChatResponse(
             response=response,
@@ -42,10 +42,10 @@ async def chat_with_canary(request: ChatRequest):
 
 
 @router.get("/profile")
-async def get_canary_profile():
-    """获取Canary的个人资料"""
+async def get_birdiland_profile():
+    """获取Birdiland的个人资料"""
     return {
-        "name": "Canary",
+        "name": "Birdiland",
         "description": "一个可爱的AI驱动的数字人",
         "personality": "友好、聪明、富有同情心",
         "interests": ["学习新事物", "帮助他人", "艺术创作"]
