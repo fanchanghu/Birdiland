@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .config import settings
 from .api.routes import router as api_router
+from .gradio_ui import mount_gradio_to_fastapi
 
 
 def create_app() -> FastAPI:
@@ -32,6 +33,9 @@ def create_app() -> FastAPI:
     # 注册API路由
     app.include_router(api_router, prefix="/api/v1")
 
+    # 挂载Gradio UI
+    app = mount_gradio_to_fastapi(app)
+
     return app
 
 
@@ -41,6 +45,7 @@ def main():
     
     print("🚀 Birdiland 数字人服务启动中...")
     print(f"📖 API文档: http://{settings.HOST}:{settings.PORT}/docs")
+    print(f"💬 聊天界面: http://{settings.HOST}:{settings.PORT}/chat")
     
     uvicorn.run(
         app,

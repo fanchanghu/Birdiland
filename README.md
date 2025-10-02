@@ -14,9 +14,9 @@ Birdiland是一个由AI驱动的数字人项目。本项目致力于打造一个
 ## 功能特性
 
 ### 核心功能
-- [ ] 智能对话系统
-- [ ] 情感识别与表达
-- [ ] 个性化形象展示
+- ✅ 智能对话系统
+- ✅ 情感识别与表达
+- ✅ 个性化形象展示
 - [ ] 多模态交互支持
 
 ### 扩展功能
@@ -24,6 +24,10 @@ Birdiland是一个由AI驱动的数字人项目。本项目致力于打造一个
 - [ ] 表情动画系统
 - [ ] 个性化学习能力
 - [ ] 第三方服务集成
+
+### Web界面
+- ✅ Gradio对话界面 (/chat)
+- ✅ FastAPI文档界面 (/docs)
 
 ## 技术架构
 
@@ -36,6 +40,7 @@ Birdiland是一个由AI驱动的数字人项目。本项目致力于打造一个
 - ✅ Uvicorn (ASGI服务器)
 - ✅ Pydantic (数据验证)
 - ✅ uv (Python包管理和虚拟环境)
+- ✅ Gradio (Web UI框架)
 
 ### AI技术栈
 - ✅ OpenAI API
@@ -76,6 +81,21 @@ uv run python -m birdiland.main
 python -m birdiland.main
 ```
 
+### 访问界面
+项目启动后，可以通过以下地址访问不同界面：
+
+- **聊天界面**: http://127.0.0.1:8000/chat
+  - 基于Gradio的友好对话界面
+  - 支持实时聊天交互
+  - 包含清空对话、查看个人资料等功能
+
+- **API文档**: http://127.0.0.1:8000/docs
+  - 交互式API文档
+  - 支持在线测试API接口
+
+- **健康检查**: http://127.0.0.1:8000/api/v1/health
+  - 服务状态检查接口
+
 ### 开发环境设置
 ```bash
 # 安装开发依赖
@@ -93,14 +113,18 @@ uv run isort src/
 
 ```
 birdiland/
-├── src/                    # 源代码目录
-│   ├── frontend/          # 前端代码
-│   ├── backend/           # 后端代码  
-│   ├── ai/                # AI模型相关
-│   └── assets/            # 资源文件
+├── birdiland/             # Python包目录
+│   ├── __init__.py        # 包初始化文件
+│   ├── main.py            # 主程序入口
+│   ├── config.py          # 配置管理
+│   ├── gradio_ui.py       # Gradio对话界面
+│   └── api/               # API路由
+│       └── routes.py      # API路由定义
 ├── docs/                  # 文档
 ├── tests/                 # 测试文件
-└── README.md             # 项目说明
+├── pyproject.toml         # 项目配置和依赖
+├── README.md              # 项目说明
+└── test_gradio_ui.py      # Gradio UI测试脚本
 ```
 
 ## 开发指南
