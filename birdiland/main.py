@@ -5,6 +5,8 @@ Birdiland 数字人主程序
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+import os
 
 from .config import settings
 from .api.routes import router as api_router
@@ -35,6 +37,9 @@ def create_app() -> FastAPI:
 
     # 挂载Gradio UI
     app = mount_gradio_to_fastapi(app)
+
+    # 添加静态文件服务，提供manifest.json等文件
+    app.mount("/", StaticFiles(directory=os.path.dirname(__file__) + "/..", html=True), name="static")
 
     return app
 

@@ -1,0 +1,68 @@
+{
+  "name": "Birdiland - AI数字人助手",
+  "short_name": "Birdiland",
+  "description": "AI驱动的智能数字人聊天助手，提供友好的对话体验",
+  "start_url": "/chat",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "images/canary/avatar.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "images/canary/avatar.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["entertainment", "social", "productivity"],
+  "lang": "zh-CN",
+  "dir": "ltr",
+  "screenshots": [
+    {
+      "src": "images/canary/green.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    },
+    {
+      "src": "images/canary/yellow.png", 
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "开始聊天",
+      "short_name": "聊天",
+      "description": "与Birdiland开始新的对话",
+      "url": "/chat",
+      "icons": [
+        {
+          "src": "images/canary/avatar.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "查看个人资料",
+      "short_name": "资料",
+      "description": "查看Birdiland的个人信息",
+      "url": "/chat?action=profile",
+      "icons": [
+        {
+          "src": "images/canary/avatar.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ]
+}

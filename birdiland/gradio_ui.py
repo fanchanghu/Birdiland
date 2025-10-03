@@ -6,7 +6,6 @@ Gradio UI模块
 import gradio as gr
 from typing import List, Tuple
 import httpx
-import asyncio
 from .config import settings
 
 
@@ -102,7 +101,7 @@ def create_gradio_interface() -> gr.Blocks:
     
     with gr.Blocks(
         title="Birdiland 聊天助手",
-        theme=gr.themes.Soft(),
+        theme=gr.themes.Default(),
     ) as interface:
         with gr.Row():
             gr.Markdown("""
@@ -118,7 +117,8 @@ def create_gradio_interface() -> gr.Blocks:
                         height=500,
                         show_copy_button=True,
                         type="messages",
-                        show_label=False
+                        show_label=False,
+                        avatar_images=(None, "images/canary/avatar.png")
                     )
                     
                 with gr.Row(equal_height=True):
