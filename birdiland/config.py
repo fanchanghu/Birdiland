@@ -29,9 +29,13 @@ class Settings(BaseSettings):
     # 模型配置
     DEFAULT_MODEL: str = "gpt-3.5-turbo"
     
+    # 其他配置
+    UV_INDEX_URL: str = ""
+    
     class Config:
-        env_file = ".env"
+        env_file = ".env.local"
         case_sensitive = True
+        extra = "ignore"  # 忽略额外的环境变量
 
 
 # 全局配置实例

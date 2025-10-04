@@ -8,6 +8,8 @@ from pydantic import BaseModel
 import json
 import asyncio
 
+from ..agent import birdiland_agent
+
 router = APIRouter()
 
 
@@ -44,21 +46,29 @@ async def chat_with_birdiland(request: ChatRequest):
         if request.stream:
             # 流式响应
             async def generate_stream():
-                message = request.message
-                # 模拟AI生成文本的过程
-                words = f"你好！我是Birdiland。你说了：{message}".split()
-                
-                for i, word in enumerate(words):
-                    # 模拟AI思考时间
-                    await asyncio.sleep(0.1)
+                full_response = ""
+                async for chunk in birdiland_agent.chat_stream(request.message, request.user_id):
+                    full_response += chunk
+                    
+                    # 分析情感
+                    emotion = birdiland_agent.analyze_emotion(full_response)
                     
                     # 发送部分响应
                     stream_data = StreamResponse(
-                        content=word + " ",
-                        emotion="happy",
-                        is_final=(i == len(words) - 1)
+                        content=chunk,
+                        emotion=emotion,
+                        is_final=False
                     )
-                    yield f"data: {stream_data.json()}\n\n"
+                    yield f"data: {stream_data.model_dump_json()}\n\n"
+                
+                # 发送最终响应
+                final_emotion = birdiland_agent.analyze_emotion(full_response)
+                stream_data = StreamResponse(
+                    content="",
+                    emotion=final_emotion,
+                    is_final=True
+                )
+                yield f"data: {stream_data.model_dump_json()}\n\n"
                 
                 # 发送结束信号
                 yield "data: [DONE]\n\n"
@@ -68,12 +78,13 @@ async def chat_with_birdiland(request: ChatRequest):
                 media_type="text/plain; charset=utf-8"
             )
         else:
-            # 非流式响应（保持向后兼容）
-            response = f"你好！我是Birdiland。你说了：{request.message}"
+            # 非流式响应
+            response = await birdiland_agent.chat(request.message, request.user_id, stream=False)
+            emotion = birdiland_agent.analyze_emotion(response)
             
             return ChatResponse(
                 response=response,
-                emotion="happy"
+                emotion=emotion
             )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"聊天服务错误: {str(e)}")
