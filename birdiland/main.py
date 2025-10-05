@@ -57,6 +57,9 @@ def main():
         host=settings.HOST,
         port=settings.PORT,
         log_level=settings.LOG_LEVEL.lower(),
+        # 添加优雅关闭配置
+        timeout_keep_alive=30,           # 保持连接超时时间（秒）
+        timeout_graceful_shutdown=3,   # 优雅关闭超时时间（秒）
     )
 
 

@@ -14,18 +14,18 @@ class ChatUI:
     """聊天UI类"""
     
     def __init__(self):
-        self.chat_history: List[List[str]] = []
+        self.chat_history: List[dict] = []
         self.api_base_url = f"http://{settings.HOST}:{settings.PORT}/api/v1"
     
-    async def chat_with_birdiland(self, message: str, chat_history: List[List[str]]) -> AsyncGenerator[Tuple[str, List[List[str]]], None]:
+    async def chat_with_birdiland(self, message: str, chat_history: List[dict]) -> AsyncGenerator[Tuple[str, List[dict]], None]:
         """与Birdiland聊天（支持流式响应）"""
         if not message.strip():
             yield "", chat_history
             return
         
         try:
-            # 添加用户消息到历史（使用Gradio兼容的格式）
-            chat_history.append([message, None])
+            # 添加用户消息到历史（使用OpenAI格式）
+            chat_history.append({"role": "user", "content": message})
             
             # 调用后端API（使用流式响应）
             async with httpx.AsyncClient() as client:
@@ -61,7 +61,7 @@ class ChatUI:
                                     full_response += content
                                     
                                     # 更新聊天历史中的最后一条消息
-                                    chat_history[-1][1] = self._add_emotion_emoji(full_response, emotion)
+                                    chat_history[-1] = {"role": "assistant", "content": self._add_emotion_emoji(full_response, emotion)}
                                     
                                     # 返回更新后的聊天历史
                                     yield "", chat_history
@@ -70,20 +70,20 @@ class ChatUI:
                                     continue
                         
                         # 最终更新（确保表情符号正确）
-                        chat_history[-1][1] = self._add_emotion_emoji(full_response, emotion)
+                        chat_history[-1] = {"role": "assistant", "content": self._add_emotion_emoji(full_response, emotion)}
                         yield "", chat_history
                     else:
                         error_msg = f"❌ 抱歉，服务暂时不可用 (错误: {response.status_code})"
-                        chat_history[-1][1] = error_msg
+                        chat_history[-1] = {"role": "assistant", "content": error_msg}
                         yield "", chat_history
                     
         except httpx.TimeoutException:
             error_msg = "⏰ 请求超时，请稍后重试"
-            chat_history[-1][1] = error_msg
+            chat_history[-1] = {"role": "assistant", "content": error_msg}
             yield "", chat_history
         except Exception as e:
             error_msg = f"❌ 发生错误: {str(e)}"
-            chat_history[-1][1] = error_msg
+            chat_history[-1] = {"role": "assistant", "content": error_msg}
             yield "", chat_history
     
     def _add_emotion_emoji(self, text: str, emotion: str) -> str:
@@ -97,7 +97,7 @@ class ChatUI:
         else:
             return "🤖 " + text
     
-    def clear_chat(self) -> List[List[str]]:
+    def clear_chat(self) -> List[dict]:
         """清空聊天记录"""
         self.chat_history = []
         return []
@@ -110,12 +110,13 @@ class ChatUI:
                 if response.status_code == 200:
                     profile = response.json()
                     return f"""
-**🤖 Birdiland 个人资料**
+# 🤖 Birdiland 个人资料
 
-**姓名**: {profile['name']}
-**描述**: {profile['description']}
-**性格**: {profile['personality']}
-**兴趣**: {', '.join(profile['interests'])}
+- **姓名**: {profile['name']}
+- **性格**: {profile['personality']}
+- **兴趣**: {', '.join(profile['interests'])}
+- **说话风格**: {profile['speaking_style']}
+- **背景**: {profile['background']}
 """
                 else:
                     return "❌ 无法获取个人资料信息"
@@ -146,7 +147,8 @@ def create_gradio_interface() -> gr.Blocks:
                         height=500,
                         show_copy_button=True,
                         show_label=False,
-                        avatar_images=(None, "images/canary/avatar.png")
+                        avatar_images=(None, "images/canary/avatar.png"),
+                        type="messages"  # 使用新的消息格式
                     )
                     
                 with gr.Row(equal_height=True):
@@ -217,8 +219,18 @@ def mount_gradio_to_fastapi(app):
     """将Gradio界面挂载到FastAPI应用"""
     interface = create_gradio_interface()
     
-    # 使用FastAPI的挂载方式
+    # 使用FastAPI的挂载方式，并配置防止阻塞
     import gradio as gr
-    gr.mount_gradio_app(app, interface, path="/chat")
+    gr.mount_gradio_app(
+        app, 
+        interface, 
+        path="/chat",
+        # 添加配置防止阻塞
+        app_kwargs={
+            "block_thread": False,  # 不阻塞主线程
+            "show_error": True,
+            "quiet": True
+        }
+    )
     
     return app
