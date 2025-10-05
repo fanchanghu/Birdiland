@@ -110,8 +110,6 @@ class ChatUI:
                 if response.status_code == 200:
                     profile = response.json()
                     return f"""
-# 🤖 Birdiland 个人资料
-
 - **姓名**: {profile['name']}
 - **性格**: {profile['personality']}
 - **兴趣**: {', '.join(profile['interests'])}
@@ -161,33 +159,28 @@ def create_gradio_interface() -> gr.Blocks:
                         submit_btn="发送"
                     )
                 
-                with gr.Row():
-                    clear_btn = gr.Button("清空对话", variant="secondary")
-                    profile_btn = gr.Button("查看个人资料", variant="secondary")
             
             # 隐藏组件用于保存用户输入
             user_message = gr.State()
             
             with gr.Column(scale=1):
-                gr.Markdown("### ℹ️ 使用说明")
-                gr.Markdown("""
-                - 在下方输入框输入消息
-                - 点击发送或按Enter键发送
-                - 可以随时清空对话记录
-                - 点击"查看个人资料"了解Birdiland
-                
-                **功能特点:**
-                - 友好的对话界面
-                - 表情丰富的回复
-                - 支持长对话
-                - 响应式设计
-                """)
+                gr.Markdown("### 角色个人资料")
                 profile_output = gr.Markdown()
     
         # 事件处理
         def save_user_message(message):
             """保存用户消息到状态"""
             return message
+        
+        async def load_profile_on_start():
+            """界面加载时自动加载个人资料"""
+            return await chat_ui.get_birdiland_profile()
+        
+        # 界面加载时自动加载个人资料
+        interface.load(
+            load_profile_on_start,
+            outputs=[profile_output]
+        )
         
         msg.submit(
             save_user_message,
@@ -200,16 +193,6 @@ def create_gradio_interface() -> gr.Blocks:
             chat_ui.chat_with_birdiland,
             inputs=[user_message, chatbot],
             outputs=[msg, chatbot]
-        )
-        
-        clear_btn.click(
-            chat_ui.clear_chat,
-            outputs=[chatbot]
-        )
-        
-        profile_btn.click(
-            chat_ui.get_birdiland_profile,
-            outputs=[profile_output]
         )
     
     return interface
