@@ -19,14 +19,9 @@ class ChatUI:
     
     async def chat_with_birdiland(self, message: str, chat_history: List[dict]) -> AsyncGenerator[Tuple[str, List[dict]], None]:
         """与Birdiland聊天（支持流式响应）"""
-        if not message.strip():
-            yield "", chat_history
-            return
-        
+
+        chat_history.append({"role": "assistant", "content": ""}) # 预先添加空的助手消息
         try:
-            # 添加用户消息到历史（使用OpenAI格式）
-            chat_history.append({"role": "user", "content": message})
-            
             # 调用后端API（使用流式响应）
             async with httpx.AsyncClient() as client:
                 async with client.stream(
@@ -172,6 +167,11 @@ def create_gradio_interface() -> gr.Blocks:
             """保存用户消息到状态"""
             return message
         
+        def add_user_message_to_chat(message, chat_history):
+            """将用户消息添加到聊天历史并立即显示"""
+            chat_history.append({"role": "user", "content": message})
+            return "", chat_history
+        
         async def load_profile_on_start():
             """界面加载时自动加载个人资料"""
             return await chat_ui.get_birdiland_profile()
@@ -187,8 +187,9 @@ def create_gradio_interface() -> gr.Blocks:
             inputs=[msg],
             outputs=[user_message]
         ).then(
-            lambda: "",  # 清空输入框
-            outputs=[msg]
+            add_user_message_to_chat,
+            inputs=[user_message, chatbot],
+            outputs=[msg, chatbot]
         ).then(
             chat_ui.chat_with_birdiland,
             inputs=[user_message, chatbot],
