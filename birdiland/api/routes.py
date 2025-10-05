@@ -92,10 +92,5 @@ async def chat_with_birdiland(request: ChatRequest):
 
 @router.get("/profile")
 async def get_birdiland_profile():
-    """获取Birdiland的个人资料"""
-    return {
-        "name": "Birdiland",
-        "description": "一个可爱的AI驱动的数字人",
-        "personality": "友好、聪明、富有同情心",
-        "interests": ["学习新事物", "帮助他人", "艺术创作"]
-    }
+    """获取角色的个人资料"""
+    return birdiland_agent.character_profile
