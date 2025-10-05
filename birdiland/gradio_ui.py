@@ -155,7 +155,7 @@ def create_gradio_interface() -> gr.Blocks:
                         placeholder="输入你想说的话...",
                         scale=8,
                         show_label=False,
-                        lines=3,
+                        lines=1,
                         max_lines=10,
                         submit_btn="发送"
                     )
