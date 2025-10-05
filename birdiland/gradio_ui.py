@@ -19,9 +19,15 @@ class ChatUI:
     
     async def chat_with_birdiland(self, message: str, chat_history: List[dict]) -> AsyncGenerator[Tuple[str, List[dict]], None]:
         """与Birdiland聊天（支持流式响应）"""
-
-        chat_history.append({"role": "assistant", "content": ""}) # 预先添加空的助手消息
+        if not message.strip():
+            # 如果消息为空，直接返回不处理
+            yield "", chat_history
+            return
+        
         try:
+            # 预先添加空的助手消息，确保chat_history[-1]能正确修改
+            chat_history.append({"role": "assistant", "content": ""})
+            
             # 调用后端API（使用流式响应）
             async with httpx.AsyncClient() as client:
                 async with client.stream(
@@ -169,6 +175,9 @@ def create_gradio_interface() -> gr.Blocks:
         
         def add_user_message_to_chat(message, chat_history):
             """将用户消息添加到聊天历史并立即显示"""
+            if not message.strip():
+                # 如果消息为空，不添加到聊天历史
+                return message, chat_history
             chat_history.append({"role": "user", "content": message})
             return "", chat_history
         
