@@ -17,7 +17,7 @@ class ChatUI:
         self.chat_history: List[dict] = []
         self.api_base_url = f"http://{settings.HOST}:{settings.PORT}/api/v1"
     
-    async def chat_with_birdiland(self, message: str, chat_history: List[dict]) -> AsyncGenerator[Tuple[str, List[dict]], None]:
+    async def chat_with_birdiland(self, message: str, chat_history: List[dict], agent_id: str = "canary") -> AsyncGenerator[Tuple[str, List[dict]], None]:
         """与Birdiland聊天（支持流式响应）"""
         if not message.strip():
             # 如果消息为空，直接返回不处理
@@ -36,6 +36,7 @@ class ChatUI:
                     json={
                         "message": message,
                         "user_id": "gradio_user",
+                        "agent_id": agent_id,  # 传递选择的agent_id
                         "stream": True
                     },
                     timeout=30.0
@@ -182,7 +183,6 @@ def create_gradio_interface() -> gr.Blocks:
                 gr.Markdown("### 选择数字人")
                 digital_human_dropdown = gr.Dropdown(
                     choices=[],
-                    value="",
                     show_label=False,
                     interactive=True
                 )
@@ -217,7 +217,12 @@ def create_gradio_interface() -> gr.Blocks:
         
         async def load_profile_on_start():
             """界面加载时自动加载个人资料"""
-            return await chat_ui.get_birdiland_profile()
+            agents = await chat_ui.get_agents_list()
+            if agents:
+                # 使用第一个agent的id来加载个人资料
+                return await chat_ui.get_birdiland_profile(agents[0]["id"])
+            else:
+                return "❌ 无法获取agent列表"
         
         async def update_profile_on_digital_human_change(agent_id):
             """当数字人选择改变时更新个人资料"""
@@ -249,7 +254,7 @@ def create_gradio_interface() -> gr.Blocks:
             outputs=[msg, chatbot]
         ).then(
             chat_ui.chat_with_birdiland,
-            inputs=[user_message, chatbot],
+            inputs=[user_message, chatbot, digital_human_dropdown],  # 添加agent_id输入
             outputs=[msg, chatbot]
         )
     

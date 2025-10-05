@@ -11,10 +11,29 @@ from openai import AsyncOpenAI
 from .config import settings
 
 
+# 定义所有agent的个人资料（统一数据源）
+AGENT_PROFILES = {
+    "canary": {
+        "name": "Canary",
+        "personality": "一个友好、聪明、富有同情心的AI助手，喜欢帮助他人，对世界充满好奇心",
+        "interests": ["学习新事物", "帮助他人", "艺术创作", "科技发展", "自然探索"],
+        "speaking_style": "温暖、自然、富有同理心，喜欢用积极的方式与人交流",
+        "background": "我是一个AI驱动的数字人，专门设计来与人类进行有意义的对话和提供帮助"
+    },
+    "snow_fairy": {
+        "name": "Snow Fairy",
+        "personality": "神秘、优雅、充满智慧，对宇宙和自然有着深刻的理解",
+        "interests": ["冰雪魔法", "星空观测", "古老传说", "哲学思考", "自然探索"],
+        "speaking_style": "诗意、富有哲理、略带神秘感，喜欢用比喻和象征来表达",
+        "background": "来自北极冰雪王国的精灵，掌握着古老的冰雪魔法，喜欢在星空下思考宇宙的奥秘"
+    }
+}
+
+
 class BirdilandAgent:
-    """Birdiland 数字人代理类"""
+    """Birdiland 数字人代理类（表示特定的agent）"""
     
-    def __init__(self):
+    def __init__(self, agent_id: str):
         """初始化数字人代理"""
         self.client = AsyncOpenAI(
             api_key=settings.OPENAI_API_KEY,
@@ -22,15 +41,10 @@ class BirdilandAgent:
             timeout=30.0  # 添加超时设置
         )
         self.model = settings.DEFAULT_MODEL
+        self.agent_id = agent_id
         
-        # 数字人角色设定
-        self.character_profile = {
-            "name": "Canary",
-            "personality": "一个友好、聪明、富有同情心的AI助手，喜欢帮助他人，对世界充满好奇心",
-            "interests": ["学习新事物", "帮助他人", "艺术创作", "科技发展", "自然探索"],
-            "speaking_style": "温暖、自然、富有同理心，喜欢用积极的方式与人交流",
-            "background": "我是一个AI驱动的数字人，专门设计来与人类进行有意义的对话和提供帮助"
-        }
+        # 设置角色配置
+        self.character_profile = AGENT_PROFILES.get(agent_id, AGENT_PROFILES["canary"])
         
         # 对话历史管理
         self.conversation_histories: Dict[str, List[Dict[str, str]]] = {}
@@ -222,5 +236,35 @@ class BirdilandAgent:
             del self.conversation_histories[user_id]
 
 
-# 全局代理实例
-birdiland_agent = BirdilandAgent()
+class AgentManager:
+    """Agent管理器，管理多个BirdilandAgent实例"""
+    
+    def __init__(self):
+        """初始化Agent管理器"""
+        self.agents: Dict[str, BirdilandAgent] = {}
+        self._initialize_agents()
+    
+    def _initialize_agents(self):
+        """初始化所有agent实例"""
+        for agent_id in AGENT_PROFILES.keys():
+            self.agents[agent_id] = BirdilandAgent(agent_id)
+    
+    def get_agent(self, agent_id: str) -> BirdilandAgent:
+        """获取指定agent_id的实例"""
+        return self.agents.get(agent_id, self.agents["canary"])
+    
+    def get_available_agents(self) -> List[Dict[str, Any]]:
+        """获取可用的agent列表"""
+        agents_list = []
+        for agent_id, profile in AGENT_PROFILES.items():
+            agents_list.append({
+                "id": agent_id,
+                "name": profile["name"],
+                "description": f"{profile['personality']} - {profile['speaking_style']}",
+                "avatar": f"images/{agent_id}/avatar.png" if agent_id == "canary" else "images/canary/avatar.png"  # 暂时使用相同的头像
+            })
+        return agents_list
+
+
+# 全局Agent管理器实例
+agent_manager = AgentManager()

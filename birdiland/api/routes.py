@@ -8,7 +8,7 @@ from pydantic import BaseModel
 import json
 import asyncio
 
-from ..agent import birdiland_agent
+from ..agent import agent_manager, AGENT_PROFILES
 
 router = APIRouter()
 
@@ -17,6 +17,7 @@ class ChatRequest(BaseModel):
     """聊天请求"""
     message: str
     user_id: str = "default"
+    agent_id: str = "canary"  # 添加agent_id参数
     stream: bool = False
 
 
@@ -43,15 +44,18 @@ async def health_check():
 async def chat_with_birdiland(request: ChatRequest):
     """与Birdiland聊天"""
     try:
+        # 获取指定agent的实例
+        agent = agent_manager.get_agent(request.agent_id)
+        
         if request.stream:
             # 流式响应
             async def generate_stream():
                 full_response = ""
-                async for chunk in birdiland_agent.chat_stream(request.message, request.user_id):
+                async for chunk in agent.chat_stream(request.message, request.user_id):
                     full_response += chunk
                     
                     # 分析情感
-                    emotion = birdiland_agent.analyze_emotion(full_response)
+                    emotion = agent.analyze_emotion(full_response)
                     
                     # 发送部分响应
                     stream_data = StreamResponse(
@@ -62,7 +66,7 @@ async def chat_with_birdiland(request: ChatRequest):
                     yield f"data: {stream_data.model_dump_json()}\n\n"
                 
                 # 发送最终响应
-                final_emotion = birdiland_agent.analyze_emotion(full_response)
+                final_emotion = agent.analyze_emotion(full_response)
                 stream_data = StreamResponse(
                     content="",
                     emotion=final_emotion,
@@ -79,8 +83,8 @@ async def chat_with_birdiland(request: ChatRequest):
             )
         else:
             # 非流式响应
-            response = await birdiland_agent.chat(request.message, request.user_id, stream=False)
-            emotion = birdiland_agent.analyze_emotion(response)
+            response = await agent.chat(request.message, request.user_id, stream=False)
+            emotion = agent.analyze_emotion(response)
             
             return ChatResponse(
                 response=response,
@@ -92,46 +96,15 @@ async def chat_with_birdiland(request: ChatRequest):
 
 @router.get("/profile")
 async def get_birdiland_profile():
-    """获取角色的个人资料"""
-    return birdiland_agent.character_profile
+    """获取角色的个人资料（向后兼容，返回默认agent的个人资料）"""
+    default_agent = agent_manager.get_agent("canary")
+    return default_agent.character_profile
 
-
-# 定义所有agent的个人资料
-AGENT_PROFILES = {
-    "canary": {
-        "name": "Canary",
-        "personality": "友好、热情、乐于助人",
-        "interests": ["学习新知识", "帮助他人", "探索科技"],
-        "speaking_style": "亲切、自然、富有同理心",
-        "background": "一个乐于助人的AI助手，致力于为用户提供最好的服务体验"
-    },
-    "snow_fairy": {
-        "name": "Snow Fairy",
-        "personality": "神秘、优雅、充满智慧",
-        "interests": ["冰雪魔法", "星空观测", "古老传说"],
-        "speaking_style": "诗意、富有哲理、略带神秘感",
-        "background": "来自北极冰雪王国的精灵，掌握着古老的冰雪魔法，喜欢在星空下思考宇宙的奥秘"
-    }
-}
 
 @router.get("/agent/list")
 async def get_agents():
     """获取可用的agent列表"""
-    agents = [
-        {
-            "id": "canary",
-            "name": "Canary",
-            "description": "友好的AI助手",
-            "avatar": "images/canary/avatar.png"
-        },
-        {
-            "id": "snow_fairy",
-            "name": "Snow Fairy",
-            "description": "冰雪精灵，充满神秘与智慧",
-            "avatar": "images/canary/avatar.png"  # 暂时使用相同的头像
-        }
-    ]
-    return agents
+    return agent_manager.get_available_agents()
 
 
 @router.get("/agent/{agent_id}/profile")
