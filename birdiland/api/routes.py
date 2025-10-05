@@ -94,3 +94,50 @@ async def chat_with_birdiland(request: ChatRequest):
 async def get_birdiland_profile():
     """获取角色的个人资料"""
     return birdiland_agent.character_profile
+
+
+# 定义所有agent的个人资料
+AGENT_PROFILES = {
+    "canary": {
+        "name": "Canary",
+        "personality": "友好、热情、乐于助人",
+        "interests": ["学习新知识", "帮助他人", "探索科技"],
+        "speaking_style": "亲切、自然、富有同理心",
+        "background": "一个乐于助人的AI助手，致力于为用户提供最好的服务体验"
+    },
+    "snow_fairy": {
+        "name": "Snow Fairy",
+        "personality": "神秘、优雅、充满智慧",
+        "interests": ["冰雪魔法", "星空观测", "古老传说"],
+        "speaking_style": "诗意、富有哲理、略带神秘感",
+        "background": "来自北极冰雪王国的精灵，掌握着古老的冰雪魔法，喜欢在星空下思考宇宙的奥秘"
+    }
+}
+
+@router.get("/agent/list")
+async def get_agents():
+    """获取可用的agent列表"""
+    agents = [
+        {
+            "id": "canary",
+            "name": "Canary",
+            "description": "友好的AI助手",
+            "avatar": "images/canary/avatar.png"
+        },
+        {
+            "id": "snow_fairy",
+            "name": "Snow Fairy",
+            "description": "冰雪精灵，充满神秘与智慧",
+            "avatar": "images/canary/avatar.png"  # 暂时使用相同的头像
+        }
+    ]
+    return agents
+
+
+@router.get("/agent/{agent_id}/profile")
+async def get_agent_profile(agent_id: str):
+    """获取指定agent的个人资料"""
+    if agent_id in AGENT_PROFILES:
+        return AGENT_PROFILES[agent_id]
+    else:
+        return None

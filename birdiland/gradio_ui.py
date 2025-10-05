@@ -103,11 +103,24 @@ class ChatUI:
         self.chat_history = []
         return []
     
-    async def get_birdiland_profile(self) -> str:
+    async def get_agents_list(self) -> list:
+        """获取agent列表"""
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(f"{self.api_base_url}/agent/list")
+                if response.status_code == 200:
+                    return response.json()
+                else:
+                    return []
+        except Exception as e:
+            print(f"获取agent列表时出错: {str(e)}")
+            return []
+    
+    async def get_birdiland_profile(self, agent_id: str = "canary") -> str:
         """获取Birdiland个人资料"""
         try:
             async with httpx.AsyncClient() as client:
-                response = await client.get(f"{self.api_base_url}/profile")
+                response = await client.get(f"{self.api_base_url}/agent/{agent_id}/profile")
                 if response.status_code == 200:
                     profile = response.json()
                     return f"""
@@ -136,7 +149,7 @@ def create_gradio_interface() -> gr.Blocks:
             gr.Markdown("""
             # 🤖 Birdiland 聊天助手
             
-            欢迎与Birdiland聊天！这是一个AI驱动的数字人，可以回答你的问题并与你交流。
+            这是一个AI驱动的数字人，可以回答你的问题并与你交流。
             """)
         
         with gr.Row():
@@ -165,6 +178,15 @@ def create_gradio_interface() -> gr.Blocks:
             user_message = gr.State()
             
             with gr.Column(scale=1):
+                # 数字人选择下拉框
+                gr.Markdown("### 选择数字人")
+                digital_human_dropdown = gr.Dropdown(
+                    choices=[],
+                    value="",
+                    show_label=False,
+                    interactive=True
+                )
+                
                 gr.Markdown("### 角色个人资料")
                 profile_output = gr.Markdown()
     
@@ -181,13 +203,39 @@ def create_gradio_interface() -> gr.Blocks:
             chat_history.append({"role": "user", "content": message})
             return "", chat_history
         
+        async def load_agents_on_start():
+            """界面加载时自动加载agent列表"""
+            agents = await chat_ui.get_agents_list()
+            if agents:
+                # 创建下拉框选项：使用agent id作为值，agent name作为显示文本
+                choices = [(agent["name"], agent["id"]) for agent in agents]
+                # 设置默认值为第一个agent的id
+                default_value = agents[0]["id"] if agents else ""
+                return gr.update(choices=choices, value=default_value)
+            else:
+                return gr.update(choices=[], value="")
+        
         async def load_profile_on_start():
             """界面加载时自动加载个人资料"""
             return await chat_ui.get_birdiland_profile()
         
-        # 界面加载时自动加载个人资料
+        async def update_profile_on_digital_human_change(agent_id):
+            """当数字人选择改变时更新个人资料"""
+            return await chat_ui.get_birdiland_profile(agent_id)
+        
+        # 界面加载时自动加载agent列表和个人资料
         interface.load(
+            load_agents_on_start,
+            outputs=[digital_human_dropdown]
+        ).then(
             load_profile_on_start,
+            outputs=[profile_output]
+        )
+        
+        # 数字人选择改变时更新个人资料
+        digital_human_dropdown.change(
+            update_profile_on_digital_human_change,
+            inputs=[digital_human_dropdown],
             outputs=[profile_output]
         )
         
