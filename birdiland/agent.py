@@ -251,7 +251,7 @@ class AgentManager:
     
     def get_agent(self, agent_id: str) -> BirdilandAgent:
         """获取指定agent_id的实例"""
-        return self.agents.get(agent_id, self.agents["canary"])
+        return self.agents.get(agent_id)
     
     def get_available_agents(self) -> List[Dict[str, Any]]:
         """获取可用的agent列表"""

@@ -94,13 +94,6 @@ async def chat_with_birdiland(request: ChatRequest):
         raise HTTPException(status_code=500, detail=f"聊天服务错误: {str(e)}")
 
 
-@router.get("/profile")
-async def get_birdiland_profile():
-    """获取角色的个人资料（向后兼容，返回默认agent的个人资料）"""
-    default_agent = agent_manager.get_agent("canary")
-    return default_agent.character_profile
-
-
 @router.get("/agent/list")
 async def get_agents():
     """获取可用的agent列表"""
