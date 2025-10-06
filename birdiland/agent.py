@@ -261,7 +261,7 @@ class AgentManager:
                 "id": agent_id,
                 "name": profile["name"],
                 "description": f"{profile['personality']} - {profile['speaking_style']}",
-                "avatar": f"images/{agent_id}/avatar.png" if agent_id == "canary" else "images/canary/avatar.png"  # 暂时使用相同的头像
+                "avatar": f"images/{agent_id}/avatar.png"
             })
         return agents_list
 

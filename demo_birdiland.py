@@ -13,7 +13,7 @@ async def demo_birdiland():
     print("=" * 50)
     
     # 创建数字人代理
-    agent = BirdilandAgent()
+    agent = BirdilandAgent("canary")
     
     # 演示对话
     conversations = [

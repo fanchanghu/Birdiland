@@ -160,7 +160,6 @@ def create_gradio_interface() -> gr.Blocks:
                         height=500,
                         show_copy_button=True,
                         show_label=False,
-                        avatar_images=(None, "images/canary/avatar.png"),
                         type="messages"  # 使用新的消息格式
                     )
                     
@@ -228,6 +227,28 @@ def create_gradio_interface() -> gr.Blocks:
             """当数字人选择改变时更新个人资料"""
             return await chat_ui.get_birdiland_profile(agent_id)
         
+        async def get_agent_avatar(agent_id: str) -> str:
+            """根据agent_id获取对应的头像路径"""
+            try:
+                async with httpx.AsyncClient() as client:
+                    response = await client.get(f"{chat_ui.api_base_url}/agent/list")
+                    if response.status_code == 200:
+                        agents = response.json()
+                        for agent in agents:
+                            if agent["id"] == agent_id:
+                                return agent.get("avatar", "images/canary/avatar.png")
+            except Exception as e:
+                return None
+        
+        async def update_chatbot_avatar(agent_id):
+            """更新聊天机器人的头像"""
+            avatar_path = await get_agent_avatar(agent_id)
+            return gr.update(avatar_images=(None, avatar_path))
+        
+        def clear_chat_history_on_agent_change():
+            """当切换角色时清空聊天历史"""
+            return []
+        
         # 界面加载时自动加载agent列表和个人资料
         interface.load(
             load_agents_on_start,
@@ -237,11 +258,18 @@ def create_gradio_interface() -> gr.Blocks:
             outputs=[profile_output]
         )
         
-        # 数字人选择改变时更新个人资料
+        # 数字人选择改变时更新个人资料、头像并清空聊天历史
         digital_human_dropdown.change(
             update_profile_on_digital_human_change,
             inputs=[digital_human_dropdown],
             outputs=[profile_output]
+        ).then(
+            clear_chat_history_on_agent_change,
+            outputs=[chatbot]
+        ).then(
+            update_chatbot_avatar,
+            inputs=[digital_human_dropdown],
+            outputs=[chatbot]
         )
         
         msg.submit(
