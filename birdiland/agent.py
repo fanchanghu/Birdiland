@@ -46,8 +46,8 @@ class BirdilandAgent:
         # 设置角色配置
         self.character_profile = AGENT_PROFILES.get(agent_id, AGENT_PROFILES["canary"])
         
-        # 对话历史管理
-        self.conversation_histories: Dict[str, List[Dict[str, str]]] = {}
+        # 对话历史管理（单个agent的对话历史）
+        self.conversation_history: List[Dict[str, str]] = []
         
         # 最大对话历史长度
         self.max_history_length = 10
@@ -69,29 +69,26 @@ class BirdilandAgent:
         用中文进行对话，保持温暖和积极的态度。
         """
     
-    def _get_conversation_history(self, user_id: str) -> List[Dict[str, str]]:
-        """获取用户的对话历史"""
-        if user_id not in self.conversation_histories:
-            self.conversation_histories[user_id] = []
-        return self.conversation_histories[user_id]
+    def _get_conversation_history(self) -> List[Dict[str, str]]:
+        """获取对话历史"""
+        return self.conversation_history
     
-    def _update_conversation_history(self, user_id: str, role: str, content: str):
+    def _update_conversation_history(self, role: str, content: str):
         """更新对话历史"""
-        history = self._get_conversation_history(user_id)
-        history.append({"role": role, "content": content})
+        self.conversation_history.append({"role": role, "content": content})
         
         # 保持历史长度不超过限制
-        if len(history) > self.max_history_length:
-            history.pop(0)
+        if len(self.conversation_history) > self.max_history_length:
+            self.conversation_history.pop(0)
     
-    def _build_messages(self, user_message: str, user_id: str) -> List[Dict[str, str]]:
+    def _build_messages(self, user_message: str) -> List[Dict[str, str]]:
         """构建完整的消息列表"""
         messages = [
             {"role": "system", "content": self._build_system_prompt()}
         ]
         
         # 添加对话历史
-        history = self._get_conversation_history(user_id)
+        history = self._get_conversation_history()
         messages.extend(history)
         
         # 添加当前用户消息
@@ -99,13 +96,12 @@ class BirdilandAgent:
         
         return messages
     
-    async def chat(self, message: str, user_id: str = "default", stream: bool = False) -> str:
+    async def chat(self, message: str, stream: bool = False) -> str:
         """
         与数字人进行对话
         
         Args:
             message: 用户消息
-            user_id: 用户ID，用于维护对话历史
             stream: 是否使用流式响应
             
         Returns:
@@ -116,7 +112,7 @@ class BirdilandAgent:
             if not settings.OPENAI_API_KEY or settings.OPENAI_API_KEY == "":
                 return "你好！我是Canary。目前AI服务正在配置中，暂时无法提供智能对话。"
             
-            messages = self._build_messages(message, user_id)
+            messages = self._build_messages(message)
             
             if stream:
                 # 流式响应
@@ -135,8 +131,8 @@ class BirdilandAgent:
                         full_response += content
                 
                 # 更新对话历史
-                self._update_conversation_history(user_id, "user", message)
-                self._update_conversation_history(user_id, "assistant", full_response)
+                self._update_conversation_history("user", message)
+                self._update_conversation_history("assistant", full_response)
                 
                 return full_response
             else:
@@ -151,8 +147,8 @@ class BirdilandAgent:
                 assistant_response = response.choices[0].message.content
                 
                 # 更新对话历史
-                self._update_conversation_history(user_id, "user", message)
-                self._update_conversation_history(user_id, "assistant", assistant_response)
+                self._update_conversation_history("user", message)
+                self._update_conversation_history("assistant", assistant_response)
                 
                 return assistant_response
                 
@@ -166,19 +162,18 @@ class BirdilandAgent:
             import random
             return random.choice(fallback_responses)
     
-    async def chat_stream(self, message: str, user_id: str = "default") -> AsyncGenerator[str, None]:
+    async def chat_stream(self, message: str) -> AsyncGenerator[str, None]:
         """
         流式对话响应
         
         Args:
             message: 用户消息
-            user_id: 用户ID
             
         Yields:
             流式响应的文本片段
         """
         try:
-            messages = self._build_messages(message, user_id)
+            messages = self._build_messages(message)
             
             response = await self.client.chat.completions.create(
                 model=self.model,
@@ -196,8 +191,8 @@ class BirdilandAgent:
                     yield content
             
             # 更新对话历史
-            self._update_conversation_history(user_id, "user", message)
-            self._update_conversation_history(user_id, "assistant", full_response)
+            self._update_conversation_history("user", message)
+            self._update_conversation_history("assistant", full_response)
             
         except Exception as e:
             yield f"抱歉，我在处理你的消息时遇到了问题：{str(e)}"
@@ -230,10 +225,9 @@ class BirdilandAgent:
         else:
             return "neutral"
     
-    def clear_conversation_history(self, user_id: str):
-        """清除指定用户的对话历史"""
-        if user_id in self.conversation_histories:
-            del self.conversation_histories[user_id]
+    def clear_conversation_history(self):
+        """清除对话历史"""
+        self.conversation_history.clear()
 
 
 class AgentManager:

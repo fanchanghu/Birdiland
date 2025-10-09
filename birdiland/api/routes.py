@@ -16,7 +16,6 @@ router = APIRouter()
 class ChatRequest(BaseModel):
     """聊天请求"""
     message: str
-    user_id: str = "default"
     agent_id: str = "canary"  # 添加agent_id参数
     stream: bool = False
 
@@ -51,7 +50,7 @@ async def chat_with_birdiland(request: ChatRequest):
             # 流式响应
             async def generate_stream():
                 full_response = ""
-                async for chunk in agent.chat_stream(request.message, request.user_id):
+                async for chunk in agent.chat_stream(request.message):
                     full_response += chunk
                     
                     # 分析情感
@@ -83,7 +82,7 @@ async def chat_with_birdiland(request: ChatRequest):
             )
         else:
             # 非流式响应
-            response = await agent.chat(request.message, request.user_id, stream=False)
+            response = await agent.chat(request.message, stream=False)
             emotion = agent.analyze_emotion(response)
             
             return ChatResponse(

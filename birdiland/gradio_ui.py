@@ -35,7 +35,6 @@ class ChatUI:
                     f"{self.api_base_url}/chat",
                     json={
                         "message": message,
-                        "user_id": "gradio_user",
                         "agent_id": agent_id,  # 传递选择的agent_id
                         "stream": True
                     },
