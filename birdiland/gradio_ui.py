@@ -135,6 +135,21 @@ class ChatUI:
         except Exception as e:
             return f"❌ 获取个人资料时出错: {str(e)}"
 
+    async def get_agent_conversation_history(self, agent_id: str) -> List[dict]:
+        """获取指定agent的对话历史"""
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(f"{self.api_base_url}/agent/{agent_id}/history")
+                if response.status_code == 200:
+                    history = response.json()
+                    # 确保返回的格式与gradio兼容
+                    return history
+                else:
+                    return []
+        except Exception as e:
+            print(f"获取对话历史时出错: {str(e)}")
+            return []
+
 
 def create_gradio_interface() -> gr.Blocks:
     """创建Gradio界面"""
@@ -244,9 +259,10 @@ def create_gradio_interface() -> gr.Blocks:
             avatar_path = await get_agent_avatar(agent_id)
             return gr.update(avatar_images=(None, avatar_path))
         
-        def clear_chat_history_on_agent_change():
-            """当切换角色时清空聊天历史"""
-            return []
+        async def load_conversation_history_on_agent_change(agent_id):
+            """当切换角色时加载该角色的对话历史"""
+            history = await chat_ui.get_agent_conversation_history(agent_id)
+            return history
         
         # 界面加载时自动加载agent列表和个人资料
         interface.load(
@@ -257,16 +273,21 @@ def create_gradio_interface() -> gr.Blocks:
             outputs=[profile_output]
         )
         
-        # 数字人选择改变时更新个人资料、头像并清空聊天历史
+        # 数字人选择改变时更新个人资料、加载对话历史并更新头像
         digital_human_dropdown.change(
             update_profile_on_digital_human_change,
             inputs=[digital_human_dropdown],
             outputs=[profile_output]
         ).then(
-            clear_chat_history_on_agent_change,
+            lambda: [],
+            inputs=[],
             outputs=[chatbot]
         ).then(
             update_chatbot_avatar,
+            inputs=[digital_human_dropdown],
+            outputs=[chatbot]
+        ).then(
+            load_conversation_history_on_agent_change,
             inputs=[digital_human_dropdown],
             outputs=[chatbot]
         )

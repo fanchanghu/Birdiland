@@ -106,3 +106,16 @@ async def get_agent_profile(agent_id: str):
         return AGENT_PROFILES[agent_id]
     else:
         return None
+
+
+@router.get("/agent/{agent_id}/history")
+async def get_agent_conversation_history(agent_id: str):
+    """获取指定agent的对话历史"""
+    try:
+        agent = agent_manager.get_agent(agent_id)
+        if agent:
+            return agent.conversation_history
+        else:
+            return []
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取对话历史失败: {str(e)}")

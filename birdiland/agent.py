@@ -69,10 +69,6 @@ class BirdilandAgent:
         用中文进行对话，保持温暖和积极的态度。
         """
     
-    def _get_conversation_history(self) -> List[Dict[str, str]]:
-        """获取对话历史"""
-        return self.conversation_history
-    
     def _update_conversation_history(self, role: str, content: str):
         """更新对话历史"""
         self.conversation_history.append({"role": role, "content": content})
@@ -88,8 +84,7 @@ class BirdilandAgent:
         ]
         
         # 添加对话历史
-        history = self._get_conversation_history()
-        messages.extend(history)
+        messages.extend(self.conversation_history)
         
         # 添加当前用户消息
         messages.append({"role": "user", "content": user_message})
