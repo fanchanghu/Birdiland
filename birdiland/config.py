@@ -5,6 +5,7 @@
 import os
 from typing import List
 
+from pydantic import ConfigDict
 from pydantic_settings import BaseSettings
 
 
@@ -32,10 +33,11 @@ class Settings(BaseSettings):
     # 其他配置
     UV_INDEX_URL: str = ""
     
-    class Config:
-        env_file = ".env.local"
-        case_sensitive = True
-        extra = "ignore"  # 忽略额外的环境变量
+    model_config = ConfigDict(
+        env_file=".env.local",
+        case_sensitive=True,
+        extra="ignore"  # 忽略额外的环境变量
+    )
 
 
 # 全局配置实例

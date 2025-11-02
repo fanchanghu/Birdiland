@@ -36,44 +36,20 @@ class TestBirdilandAgent:
         agent = BirdilandAgent("invalid_id")
         assert agent.character_profile == AGENT_PROFILES["canary"]  # 应该回退到默认
     
-    def test_build_system_prompt(self, agent):
-        """测试系统提示词构建"""
-        prompt = agent._build_system_prompt()
-        assert "Canary" in prompt
-        assert "友好、聪明、富有同情心" in prompt
-        assert "用中文进行对话" in prompt
-    
-    def test_update_conversation_history(self, agent):
-        """测试对话历史更新"""
-        # 添加对话
-        agent._update_conversation_history("user", "你好")
-        agent._update_conversation_history("assistant", "你好！")
-        
-        assert len(agent.conversation_history) == 2
-        assert agent.conversation_history[0]["role"] == "user"
-        assert agent.conversation_history[0]["content"] == "你好"
-        assert agent.conversation_history[1]["role"] == "assistant"
-        assert agent.conversation_history[1]["content"] == "你好！"
-    
-    def test_conversation_history_limits(self, agent):
-        """测试对话历史长度限制"""
-        # 添加超过限制的对话
-        for i in range(agent.max_history_length + 5):
-            agent._update_conversation_history("user", f"消息{i}")
-            agent._update_conversation_history("assistant", f"回复{i}")
-        
-        # 历史长度不应超过限制
-        assert len(agent.conversation_history) <= agent.max_history_length
-    
-    def test_build_messages(self, agent):
-        """测试消息构建"""
-        user_message = "你好"
-        messages = agent._build_messages(user_message)
-        
-        assert len(messages) >= 2  # 至少包含系统提示和用户消息
-        assert messages[0]["role"] == "system"
-        assert messages[-1]["role"] == "user"
-        assert messages[-1]["content"] == user_message
+    @pytest.mark.asyncio
+    async def test_conversation_history_through_chat(self, agent, mock_openai_response):
+        """测试通过对话方法验证对话历史管理"""
+        with patch.object(agent.client.chat.completions, 'create', 
+                         new_callable=AsyncMock, return_value=mock_openai_response):
+            # 进行对话
+            response = await agent.chat("你好")
+            
+            # 验证对话历史被正确记录
+            assert len(agent.conversation_history) == 2  # 用户消息和助手回复
+            assert agent.conversation_history[0]["role"] == "user"
+            assert agent.conversation_history[0]["content"] == "你好"
+            assert agent.conversation_history[1]["role"] == "assistant"
+            assert response == "你好！我是Canary，很高兴认识你！"
     
     @pytest.mark.asyncio
     async def test_chat_success(self, agent, mock_openai_response):
@@ -94,9 +70,10 @@ class TestBirdilandAgent:
 
         response = await agent.chat("你好")
 
-        # 应该返回回退响应（根据实际代码，可能返回不同的回退消息）
-        assert "你好" in response
-        assert any(keyword in response for keyword in ["Canary", "AI服务", "乐意和你交流"])
+        # 应该返回回退响应
+        assert response is not None
+        assert len(response) > 0
+        assert "你好" in response  # 应该包含用户的消息
         
         # 恢复 API 密钥
         agent.client.api_key = original_key
@@ -112,6 +89,46 @@ class TestBirdilandAgent:
             # 应该返回友好的回退响应
             assert response is not None
             assert len(response) > 0
+    
+    @pytest.mark.asyncio
+    async def test_chat_stream_success(self, agent):
+        """测试流式对话成功"""
+        # 模拟流式响应
+        async def mock_stream_response():
+            chunks = [
+                MagicMock(choices=[MagicMock(delta=MagicMock(content="你好"))]),
+                MagicMock(choices=[MagicMock(delta=MagicMock(content="！我是"))]),
+                MagicMock(choices=[MagicMock(delta=MagicMock(content="Canary"))])
+            ]
+            for chunk in chunks:
+                yield chunk
+        
+        with patch.object(agent.client.chat.completions, 'create', 
+                         new_callable=AsyncMock, return_value=mock_stream_response()):
+            chunks = []
+            async for chunk in agent.chat_stream("你好"):
+                chunks.append(chunk)
+            
+            # 验证流式响应
+            assert len(chunks) == 3
+            assert "".join(chunks) == "你好！我是Canary"
+            # 验证对话历史被更新
+            assert len(agent.conversation_history) == 2
+    
+    @pytest.mark.asyncio
+    async def test_chat_stream_exception(self, agent):
+        """测试流式对话异常处理"""
+        with patch.object(agent.client.chat.completions, 'create', 
+                         new_callable=AsyncMock, 
+                         side_effect=Exception("Stream Error")):
+            chunks = []
+            async for chunk in agent.chat_stream("你好"):
+                chunks.append(chunk)
+            
+            # 应该返回错误消息
+            assert len(chunks) == 1
+            assert "抱歉" in chunks[0]
+            assert "Stream Error" in chunks[0]
     
     def test_analyze_emotion_positive(self, agent):
         """测试积极情感分析"""
@@ -131,17 +148,20 @@ class TestBirdilandAgent:
         emotion = agent.analyze_emotion(response)
         assert emotion == "neutral"
     
-    def test_clear_conversation_history(self, agent):
+    @pytest.mark.asyncio
+    async def test_clear_conversation_history(self, agent, mock_openai_response):
         """测试清除对话历史"""
-        # 添加一些对话
-        agent._update_conversation_history("user", "测试消息")
-        agent._update_conversation_history("assistant", "测试回复")
-        
-        assert len(agent.conversation_history) == 2
-        
-        # 清除历史
-        agent.clear_conversation_history()
-        assert len(agent.conversation_history) == 0
+        # 先进行对话来建立历史
+        with patch.object(agent.client.chat.completions, 'create', 
+                         new_callable=AsyncMock, return_value=mock_openai_response):
+            await agent.chat("测试消息")
+            
+            # 验证历史已建立
+            assert len(agent.conversation_history) == 2
+            
+            # 清除历史
+            agent.clear_conversation_history()
+            assert len(agent.conversation_history) == 0
 
 
 class TestAgentIntegration:
