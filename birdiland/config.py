@@ -24,10 +24,10 @@ class Settings(BaseSettings):
     
     # AI配置
     OPENAI_API_KEY: str = ""
-    OPENAI_BASE_URL: str = "https://api.openai.com/v1"
+    OPENAI_BASE_URL: str = ""
     
     # 模型配置
-    DEFAULT_MODEL: str = "gpt-3.5-turbo"
+    MODEL_NAME: str = ""
     
     # 其他配置
     UV_INDEX_URL: str = ""

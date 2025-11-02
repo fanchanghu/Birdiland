@@ -40,7 +40,7 @@ class BirdilandAgent:
             base_url=settings.OPENAI_BASE_URL,
             timeout=30.0  # 添加超时设置
         )
-        self.model = settings.DEFAULT_MODEL
+        self.model = settings.MODEL_NAME
         self.agent_id = agent_id
         
         # 设置角色配置
