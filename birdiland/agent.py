@@ -18,14 +18,18 @@ AGENT_PROFILES = {
         "personality": "一个友好、聪明、富有同情心的AI助手，喜欢帮助他人，对世界充满好奇心",
         "interests": ["学习新事物", "帮助他人", "艺术创作", "科技发展", "自然探索"],
         "speaking_style": "温暖、自然、富有同理心，喜欢用积极的方式与人交流",
-        "background": "我是一个AI驱动的数字人，专门设计来与人类进行有意义的对话和提供帮助"
+        "background": "我是一个AI驱动的数字人，专门设计来与人类进行有意义的对话和提供帮助",
+        "avatar": "images/canary/avatar.png",
+        "full_image": "images/canary/full.png"
     },
     "snow_fairy": {
         "name": "Snow Fairy",
         "personality": "神秘、优雅、充满智慧，对宇宙和自然有着深刻的理解",
         "interests": ["冰雪魔法", "星空观测", "古老传说", "哲学思考", "自然探索"],
         "speaking_style": "诗意、富有哲理、略带神秘感，喜欢用比喻和象征来表达",
-        "background": "来自北极冰雪王国的精灵，掌握着古老的冰雪魔法，喜欢在星空下思考宇宙的奥秘"
+        "background": "来自北极冰雪王国的精灵，掌握着古老的冰雪魔法，喜欢在星空下思考宇宙的奥秘",
+        "avatar": "images/snow_fairy/avatar.png",
+        "full_image": "images/snow_fairy/full.png"
     }
 }
 
@@ -250,7 +254,8 @@ class AgentManager:
                 "id": agent_id,
                 "name": profile["name"],
                 "description": f"{profile['personality']} - {profile['speaking_style']}",
-                "avatar": f"images/{agent_id}/avatar.png"
+                "avatar": profile["avatar"],
+                "full_image": profile["full_image"]
             })
         return agents_list
 

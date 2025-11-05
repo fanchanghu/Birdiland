@@ -120,16 +120,23 @@ class ChatUI:
         """获取Birdiland个人资料"""
         try:
             async with httpx.AsyncClient() as client:
-                response = await client.get(f"{self.api_base_url}/agent/{agent_id}/profile")
-                if response.status_code == 200:
-                    profile = response.json()
-                    return f"""
+                # 获取个人资料详情
+                profile_response = await client.get(f"{self.api_base_url}/agent/{agent_id}/profile")
+                if profile_response.status_code == 200:
+                    profile = profile_response.json()
+                    
+                    # 构建包含全身照的个人资料
+                    profile_content = ""
+                    profile_content += f"![{profile['name']}](/{profile['full_image']})\n\n"
+                    
+                    profile_content += f"""
 - **姓名**: {profile['name']}
 - **性格**: {profile['personality']}
 - **兴趣**: {', '.join(profile['interests'])}
 - **说话风格**: {profile['speaking_style']}
 - **背景**: {profile['background']}
 """
+                    return profile_content
                 else:
                     return "❌ 无法获取个人资料信息"
         except Exception as e:
