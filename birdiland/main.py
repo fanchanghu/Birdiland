@@ -7,6 +7,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
+from pathlib import Path
+from fastapi.responses import FileResponse
 
 from .config import settings
 from .api.routes import router as api_router
@@ -38,8 +40,17 @@ def create_app() -> FastAPI:
     # 挂载Gradio UI
     app = mount_gradio_to_fastapi(app)
 
-    # 添加静态文件服务，提供manifest.json等文件
-    app.mount("/", StaticFiles(directory=os.path.dirname(__file__) + "/..", html=True), name="static")
+    root_dir = Path(__file__).parent.parent
+
+    app.mount("/images", StaticFiles(directory=str(root_dir / "images")), name="images")
+
+    @app.get("/favicon.ico", include_in_schema=False)
+    async def get_favicon():
+        return FileResponse(str(root_dir / "favicon.ico"))
+
+    @app.get("/manifest.json", include_in_schema=False)
+    async def manifest():
+        return FileResponse(str(root_dir / "manifest.json"))
 
     return app
 
