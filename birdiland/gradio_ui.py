@@ -178,19 +178,18 @@ def create_gradio_interface() -> gr.Blocks:
             with gr.Column(scale=2):
                 with gr.Row():
                     chatbot = gr.Chatbot(
-                        height=500,
+                        height=550,
                         show_copy_button=True,
                         show_label=False,
                         type="messages"  # 使用新的消息格式
                     )
                     
-                with gr.Row(equal_height=True):
+                with gr.Row():
                     msg = gr.Textbox(
                         placeholder="输入你想说的话...",
-                        scale=8,
                         show_label=False,
                         lines=1,
-                        max_lines=10,
+                        max_lines=6,
                         submit_btn="发送"
                     )
                 

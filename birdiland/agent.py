@@ -48,7 +48,7 @@ class BirdilandAgent:
         self.agent_id = agent_id
         
         # 设置角色配置
-        self.character_profile = AGENT_PROFILES.get(agent_id, AGENT_PROFILES["canary"])
+        self.character_profile = AGENT_PROFILES.get(agent_id)
         
         # 对话历史管理（单个agent的对话历史）
         self.conversation_history: List[Dict[str, str]] = []
