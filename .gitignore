@@ -23,4 +23,3 @@ logs/
 
 # Environment variables
 .env.local
-uv.lock
