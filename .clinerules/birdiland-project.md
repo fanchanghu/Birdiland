@@ -36,3 +36,4 @@
 - 包含 manifest.json 用于应用配置
 - 支持环境变量配置
 - 提供清晰的 README 文档
+- 在 windows 环境中，总是使用 PowerShell
